@@ -2,6 +2,8 @@
 require('resources/fpdf17/fpdf.php');
 include('resources/board-creator/board-creator.php');
 
+$domain = 'lichess.org';
+
 date_default_timezone_set('UTC');
 
 function getOr($arr, $key, $def=null) {
@@ -129,7 +131,7 @@ function addVariation($pdf, $key, $move, $game) {
 
 function getUsername($id) {
 	if (isset($id)) {
-		$info = json_decode(file_get_contents('http://en.lichess.org/api/user/'.$id),true);
+		$info = json_decode(file_get_contents("http://en.$domain/api/user/".$id),true);
 		if (isset($info['username'])){
 			return ( isset($info['title']) ? strtoupper($info['title']).' ' : '' ).$info['username'];
 		} else {
@@ -231,8 +233,11 @@ function addHeader($pdf, $game){
 	$pdf->SetTextColor(112);
 	$pdf->Image('resources/images/'.$game['perf'].'.png',10,9,11);
 	$pdf->Cell(10);
+    $timeControl = $game['speed'] == 'unlimited' ? 'unlimited' : (
+        $game['daysPerTurn'] ? $game['daysPerTurn'] . ' days per move' : floor($game['clock']['initial']/60) . '+' . $game['clock']['increment']
+    );
 	$pdf->Cell(120,5, utf8_decode(strtoupper(
-		(($game['speed'] == 'unlimited')? 'unlimited' : floor($game['clock']['initial']/60) . '+' . $game['clock']['increment'])
+		$timeControl
 		. '   ' .
 		(($game['variant'] == 'fromPosition')? 'from position' : (($game['perf'] == 'kingOfTheHill')? 'king of the hill' : (($game['perf'] == 'threeCheck')? 'three-check' : $game['perf'])))
 		. '   ' . 
@@ -556,9 +561,9 @@ function createPDF($game) {
 }
 
 if (isset($argv[1])) {
-	$game = json_decode(file_get_contents('http://en.lichess.org/api/game/'.$argv[1].'?with_analysis=1&with_moves=1&with_fens=1&with_opening=1'), TRUE);
+	$game = json_decode(file_get_contents("http://en.$domain/api/game/".$argv[1].'?with_analysis=1&with_moves=1&with_fens=1&with_opening=1'), TRUE);
 } else {
-	$game = json_decode(file_get_contents('http://en.lichess.org/api/game/'.$_GET['id'].'?with_analysis=1&with_moves=1&with_fens=1&with_opening=1'), TRUE);	
+	$game = json_decode(file_get_contents("http://en.$domain/api/game/".$_GET['id'].'?with_analysis=1&with_moves=1&with_fens=1&with_opening=1'), TRUE);	
 }
 
 createPDF($game);
