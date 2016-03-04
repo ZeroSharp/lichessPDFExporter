@@ -130,6 +130,7 @@ function addVariation($pdf, $key, $move, $game) {
 }
 
 function getUsername($id) {
+    global $domain;
 	if (isset($id)) {
 		$info = json_decode(file_get_contents("http://en.$domain/api/user/".$id),true);
 		if (isset($info['username'])){
@@ -521,7 +522,7 @@ function createPDF($game) {
 			$pdf->SetFont('Arial','B',9.5);
 			$pdf->Write(3.5,'Opening ');
 			$pdf->SetFont('Arial','',9.5);
-			$pdf->Write(3.5,$game['opening']['code'].' - '.$game['opening']['name']);
+			$pdf->Write(3.5,$game['opening']['eco'].': '.$game['opening']['name']);
 			$pdf->Ln(5);
 
 			$printedCom = true;
