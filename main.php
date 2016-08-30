@@ -250,7 +250,7 @@ function addHeader($pdf, $game){
 	// Date
 	$pdf->SetFont('Arial','',10);
 	$pdf->SetTextColor(112);
-	$pdf->Cell(60,4,date('l, F j, Y',substr($game['timestamp'],0,10)) . ' at lichess.org/' . $game['id'],0,1,'L');
+	$pdf->Cell(60,4,date('l, F j, Y',substr($game['createdAt'],0,10)) . ' at lichess.org/' . $game['id'],0,1,'L');
 	$pdf->Cell(0,2,'',0,1);
 	$pdf->SetTextColor(0);
 
