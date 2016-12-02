@@ -1,10 +1,26 @@
 <?php
 require('resources/fpdf17/fpdf.php');
 include('resources/board-creator/board-creator.php');
+include('resources/json/json.php');
 
 $domain = 'lichess.org';
 
 date_default_timezone_set('UTC');
+
+function file_get_contents_curl( $url ) {
+  $ch = curl_init();
+
+  curl_setopt( $ch, CURLOPT_AUTOREFERER, TRUE );
+  curl_setopt( $ch, CURLOPT_HEADER, 0 );
+  curl_setopt( $ch, CURLOPT_RETURNTRANSFER, 1 );
+  curl_setopt( $ch, CURLOPT_URL, $url );
+  curl_setopt( $ch, CURLOPT_FOLLOWLOCATION, TRUE );
+
+  $data = curl_exec( $ch );
+  curl_close( $ch );
+
+  return $data;
+}
 
 function getOr($arr, $key, $def=null) {
 	return isset($arr[$key])? $arr[$key] : $def;
@@ -234,9 +250,10 @@ function addHeader($pdf, $game){
 	$pdf->SetTextColor(112);
 	$pdf->Image('resources/images/'.$game['perf'].'.png',10,9,11);
 	$pdf->Cell(10);
-    $timeControl = $game['speed'] == 'unlimited' ? 'unlimited' : (
-        $game['daysPerTurn'] ? $game['daysPerTurn'] . ' days per move' : floor($game['clock']['initial']/60) . '+' . $game['clock']['increment']
-    );
+        $timeControl = $game['speed'] == 'unlimited' ? 'unlimited' : (
+           getOr($game, 'daysPerTurn') != null ? $game['daysPerTurn'] . ' days per move' : (
+           getOr($game, 'clock') != null ? floor($game['clock']['initial']/60) . '+' . $game['clock']['increment'] : 'unknown')
+        );
 	$pdf->Cell(120,5, utf8_decode(strtoupper(
 		$timeControl
 		. '   ' .
@@ -245,7 +262,6 @@ function addHeader($pdf, $game){
 		($game['rated']? 'rated' : 'casual')
 		)),0,2,'L');
 	$pdf->SetTextColor(0);
-	
 
 	// Date
 	$pdf->SetFont('Arial','',10);
@@ -562,9 +578,9 @@ function createPDF($game) {
 }
 
 if (isset($argv[1])) {
-	$game = json_decode(file_get_contents("http://en.$domain/api/game/".$argv[1].'?with_analysis=1&with_moves=1&with_fens=1&with_opening=1'), TRUE);
+	$game = json_decode(file_get_contents_curl("http://en.$domain/api/game/".$argv[1].'?with_analysis=1&with_moves=1&with_fens=1&with_opening=1'), TRUE);
 } else {
-	$game = json_decode(file_get_contents("http://en.$domain/api/game/".$_GET['id'].'?with_analysis=1&with_moves=1&with_fens=1&with_opening=1'), TRUE);	
+	$game = json_decode(file_get_contents_curl("http://en.$domain/api/game/".$_GET['id'].'?with_analysis=1&with_moves=1&with_fens=1&with_opening=1'), TRUE);	
 }
 
 createPDF($game);
